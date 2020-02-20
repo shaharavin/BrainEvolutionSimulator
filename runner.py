@@ -1,6 +1,7 @@
 from simulation import init_evolve_and_calc_log_sizes, evolve_and_compare_populations, \
     evolve_and_compare_mutating_populations_with_variable_environment
-from visualisation import plot_sizes_boxplot, plot_populations_boxplot, save_boxplot_data_to_csv
+from visualisation import plot_sizes_boxplot, plot_populations_boxplot, save_boxplot_data_to_csv, \
+    save_history_to_csv
 from world import create_fixed_environment
 
 DEV_COUPLINGS = [0.0, 0.5, 1.0]
@@ -9,7 +10,7 @@ DEFAULTS = {
     'dev_coupling': 0.0,
     'func_coupling': 0.0,
     'num_critters': 100,
-    'num_generations': 10,
+    'num_generations': 100,
     'num_offspring': 3,
     'lifespan': 3,
     'num_components': 3,
@@ -37,7 +38,7 @@ def generate_mosaicism_plots_for_homogeneous_populations():
                             (func_coupling, max_benefit)
             values = [list(data[value]) for value in range_values]
             save_boxplot_data_to_csv(base_filename + '.csv', range_values, values)
-            plot_sizes_boxplot(base_filename + '.png', range_values, values)
+            # plot_sizes_boxplot(base_filename + '.png', range_values, values)
 
 
 def generate_competition_plots():
@@ -47,7 +48,6 @@ def generate_competition_plots():
     params['dev_coupling_mosaic'] = DEV_COUPLINGS[0]
     params['dev_coupling_hybrid'] = DEV_COUPLINGS[1]
     params['dev_coupling_concerted'] = DEV_COUPLINGS[2]
-    params['num_generations'] = 5
     params['num_iterations'] = NUM_RUNS
 
     del(params['dev_coupling'])
@@ -65,7 +65,7 @@ def generate_competition_plots():
             values = [[(result.get(dev_coupling, 0) / total_population)
                        for result in data] for dev_coupling in DEV_COUPLINGS]
             save_boxplot_data_to_csv(base_filename + '.csv', keys, values)
-            plot_populations_boxplot(base_filename + '.png', keys, values)
+            # plot_populations_boxplot(base_filename + '.png', keys, values)
 
 
 ENVIRONMENTS = [
@@ -88,7 +88,6 @@ def generate_competition_plots_specific_environments():
     params['dev_coupling_mosaic'] = DEV_COUPLINGS[0]
     params['dev_coupling_hybrid'] = DEV_COUPLINGS[1]
     params['dev_coupling_concerted'] = DEV_COUPLINGS[2]
-    params['num_generations'] = 5
     params['num_iterations'] = NUM_RUNS
 
     del(params['dev_coupling'])
@@ -105,7 +104,7 @@ def generate_competition_plots_specific_environments():
         values = [[(result.get(dev_coupling, 0) / total_population) for result in data]
                   for dev_coupling in DEV_COUPLINGS]
         save_boxplot_data_to_csv(base_filename + '.csv', keys, values)
-        plot_populations_boxplot(base_filename + '.png', keys, values)
+        # plot_populations_boxplot(base_filename + '.png', keys, values)
 
 
 NORMAL_RANGE = {
@@ -130,8 +129,8 @@ def generate_variable_environment_plots(range_params):
     params['dev_coupling_mosaic'] = DEV_COUPLINGS[0]
     params['dev_coupling_hybrid'] = DEV_COUPLINGS[1]
     params['dev_coupling_concerted'] = DEV_COUPLINGS[2]
-    params['num_generations_to_env_switch'] = 2
-    params['num_episodes'] = 5
+    params['num_generations_to_env_switch'] = 10
+    params['num_episodes'] = 10
     params['num_iterations'] = NUM_RUNS
     params['cost_range'] = range_params['cost_range']
     params['max_benefit_range'] = range_params['max_benefit_range']
@@ -156,12 +155,52 @@ def generate_variable_environment_plots(range_params):
             values = [[(result.get(dev_coupling, 0) / total_population) for result in data]
                       for dev_coupling in DEV_COUPLINGS]
             save_boxplot_data_to_csv(filename_base + '.csv', keys, values)
-            plot_populations_boxplot(filename_base + '.png', keys, values)
+            # plot_populations_boxplot(filename_base + '.png', keys, values)
+
+
+def generate_variable_environment_long_evolution_data(range_params):
+
+    params = DEFAULTS.copy()
+
+    params['dev_coupling_mosaic'] = DEV_COUPLINGS[0]
+    params['dev_coupling_hybrid'] = DEV_COUPLINGS[1]
+    params['dev_coupling_concerted'] = DEV_COUPLINGS[2]
+    params['num_generations_to_env_switch'] = 10
+    params['num_episodes'] = 10
+    params['num_iterations'] = 100
+    params['cost_range'] = range_params['cost_range']
+    params['max_benefit_range'] = range_params['max_benefit_range']
+    params['func_coupling_range'] = range_params['func_coupling_range']
+    params['retain_history'] = True
+
+    del(params['num_generations'])
+    del(params['dev_coupling'])
+    del(params['cost'])
+    del(params['max_benefit'])
+    del(params['func_coupling'])
+
+    # total_population = params['num_critters']*len(DEV_COUPLINGS)
+
+    for lifespan in [3]:
+        for num_offspring in [1]:
+            params['lifespan'] = lifespan
+            params['num_offspring'] = num_offspring
+            results, history = evolve_and_compare_mutating_populations_with_variable_environment(**params)
+            filename = 'long_history_var_env_%s_lifespan_%d_offspring_%d.csv' % \
+                            (range_params['name'], lifespan, num_offspring)
+            keys = DEV_COUPLINGS
+            save_history_to_csv(filename, keys, history, params['num_generations_to_env_switch'])
 
 
 if __name__ == '__main__':
-    # generate_mosaicism_plots_for_homogeneous_populations()
-    # generate_competition_plots()
-    # generate_competition_plots_specific_environments()
+    print("generate_mosaicism_plots_for_homogeneous_populations")
+    generate_mosaicism_plots_for_homogeneous_populations()
+    print("generate_competition_plots")
+    generate_competition_plots()
+    print("generate_competition_plots_specific_environments")
+    generate_competition_plots_specific_environments()
+    print("generate_variable_environment_plots")
     generate_variable_environment_plots(NORMAL_RANGE)
-    generate_variable_environment_plots(EXTREME_RANGE)
+    # generate_variable_environment_plots(EXTREME_RANGE)
+    print("generate_variable_environment_long_evolution_data")
+    generate_variable_environment_long_evolution_data(NORMAL_RANGE)

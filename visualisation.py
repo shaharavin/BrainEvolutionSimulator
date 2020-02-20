@@ -38,3 +38,18 @@ def save_boxplot_data_to_csv(filename, keys, values):
         values_zip = zip(*values)
         for row in values_zip:
             data_writer.writerow(row)
+
+
+def save_history_to_csv(filename, keys, history, generations_per_env):
+    with open(filename, 'w', newline='') as csv_file:
+        data_writer = csv.writer(csv_file)
+        for i, iteration in enumerate(history):
+            data_writer.writerow(["Iteration #%d" % i])
+            data_writer.writerow(["Env start at generation", "Cost", "Benefit A", "Benefit B", "Benefit C"])
+            for j, env in enumerate(iteration["environments"]):
+                data_writer.writerow([j * generations_per_env, env.cost, *env.benefits])
+            data_writer.writerow(["Critter counts"])
+            data_writer.writerow(keys)
+            for episode in iteration["critter_counts"]:
+                for generation in episode:
+                    data_writer.writerow([generation.get(key, 0) for key in keys])

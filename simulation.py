@@ -20,12 +20,16 @@ def init_population(num_critters, max_size, dev_coupling, num_components, mutati
 def evolve_and_calc_sizes(population, environment, num_generations, num_offspring, lifespan):
 
     assert(len(population[0].sizes) == len(environment.benefits))
-    current_gen = population
-    num_critters = len(population)
+    current_gen = list(population)
+    num_critters = len(current_gen)
 
     evolution_history = [population]
 
     for g in range(num_generations):
+
+        if not (g % 20):
+            print("%d\r"%g, end="")
+
         # grow old and multiply
         for c in current_gen[:num_critters]:
             c.age += 1
@@ -38,9 +42,7 @@ def evolve_and_calc_sizes(population, environment, num_generations, num_offsprin
         sorted_by_fitness = sorted(current_gen, key=environment.evaluate, reverse=True)
         current_gen = sorted_by_fitness[:num_critters]
 
-        # print(g, current_gen)
-
-        evolution_history.append(current_gen)
+        evolution_history.append(list(current_gen))
 
     return evolution_history
 
@@ -78,6 +80,8 @@ def init_evolve_and_calc_log_sizes(
         data[value] = []
         default_params_dict[key] = value
         for i in range(num_runs):
+            if not (i%100):
+                print(i)
             final_gen = init_evolve_and_calc_sizes(**default_params_dict)[-1]
             data[value].append(calc_average_degree_of_mosaicism(final_gen))
     return data
@@ -148,6 +152,9 @@ def evolve_and_compare_populations(
     results = []
     for i in range(num_iterations):
 
+        if not (i % 100):
+            print(i)
+
         if fixed_environment is not None:
             environment = fixed_environment
         else:
@@ -177,10 +184,21 @@ def evolve_and_compare_mutating_populations_with_variable_environment(
         num_episodes,
         num_offspring,
         lifespan,
-        num_iterations):
+        num_iterations,
+        retain_history=False):
 
     results = []
+    if retain_history:
+        history = []
+
     for i in range(num_iterations):
+
+        if not (i % 100):
+            print(i)
+
+        if retain_history:
+            environments = []
+            critter_counts = []
 
         population = init_mixed_population(
             num_critters,
@@ -196,7 +214,15 @@ def evolve_and_compare_mutating_populations_with_variable_environment(
                 cost_range, max_benefit_range, func_coupling_range, num_components)
             r = evolve_and_calc_sizes(
                 list(population), environment, num_generations_to_env_switch, num_offspring, lifespan)
+            if retain_history:
+                environments.append(environment)
+                critter_counts.append([Counter([c.dev_coupling for c in generation]) for generation in r])
             population = r[-1]
         results.append(Counter([c.dev_coupling for c in population]))
+        if retain_history:
+            history.append({"environments": environments, "critter_counts": critter_counts})
 
-    return results
+    if retain_history:
+        return results, history
+    else:
+        return results

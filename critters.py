@@ -1,6 +1,15 @@
 import random
 
 
+MUTATION_MODES = {
+    "LOSE_50_OR_ADD_50": 1,
+    "HALVE_OR_DOUBLE": 2,
+    "FIVE_PERCENT": 3,
+}
+
+MUTATION_MODE = MUTATION_MODES["FIVE_PERCENT"]
+
+
 class BrainEvolver:
     def __init__(self, max_size, dev_coupling, num_components, sizes=None):
         self.max_size = max_size
@@ -22,7 +31,14 @@ class BrainEvolver:
 
     @staticmethod
     def _get_mutation_factor():
-        return 0.5 + random.random()  # uniform distribution between 0.5 and 1.5
+        if MUTATION_MODE == MUTATION_MODES["LOSE_50_OR_ADD_50"]:
+            return 0.5 + random.random()  # uniform distribution between 0.5 and 1.5
+        elif MUTATION_MODE == MUTATION_MODES["HALVE_OR_DOUBLE"]:
+            return 2 ** random.uniform(-1, 1)
+        elif MUTATION_MODE == MUTATION_MODES["FIVE_PERCENT"]:
+            return 0.95 + (random.random() * 0.1)
+        else:
+            raise(KeyError("Unknown Mutation Mode"))
 
     def mutate(self):
         global_factor = self._get_mutation_factor()
