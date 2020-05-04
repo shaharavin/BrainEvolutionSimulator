@@ -139,7 +139,8 @@ def evolve_and_compare_populations(
         num_offspring,
         lifespan,
         num_iterations,
-        fixed_environment=None):
+        fixed_environment=None,
+        retain_history=False):
 
     population = init_mixed_population(
         num_critters,
@@ -150,6 +151,9 @@ def evolve_and_compare_populations(
         dev_coupling_hybrid)
 
     results = []
+    if retain_history:
+        history = []
+
     for i in range(num_iterations):
 
         if not (i % 100):
@@ -165,9 +169,19 @@ def evolve_and_compare_populations(
                 func_coupling=func_coupling)
 
         r = evolve_and_calc_sizes(list(population), environment, num_generations, num_offspring, lifespan)
+
         results.append(Counter([c.dev_coupling for c in r[-1]]))
 
-    return results
+        if retain_history:
+            history.append({
+                "environments": [environment],
+                "critter_counts": [[Counter([c.dev_coupling for c in generation]) for generation in r]]
+            })
+
+    if retain_history:
+        return results, history
+    else:
+        return results
 
 
 def evolve_and_compare_mutating_populations_with_variable_environment(

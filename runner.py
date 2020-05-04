@@ -68,6 +68,29 @@ def generate_competition_plots():
             # plot_populations_boxplot(base_filename + '.png', keys, values)
 
 
+def generate_long_evolution_data():
+
+    params = DEFAULTS.copy()
+
+    params['dev_coupling_mosaic'] = DEV_COUPLINGS[0]
+    params['dev_coupling_hybrid'] = DEV_COUPLINGS[1]
+    params['dev_coupling_concerted'] = DEV_COUPLINGS[2]
+
+    params['num_iterations'] = 100
+    params['retain_history'] = True
+
+    del(params['dev_coupling'])
+
+    for func_coupling in [0.0, 0.5, 1.0]:
+        for max_benefit in [1, 2, 4]:
+            params['func_coupling'] = func_coupling
+            params['max_benefit'] = max_benefit
+            results, history = evolve_and_compare_populations(**params)
+            filename = 'long_history_func_coupling_%.1f_max_benefit_%.1f.csv' % (func_coupling, max_benefit)
+            keys = DEV_COUPLINGS
+            save_history_to_csv(filename, keys, history, params['num_generations'])
+
+
 ENVIRONMENTS = [
     create_fixed_environment(1, [22, 2, 0]),  # [21,  1, -1]
     create_fixed_environment(1, [12, 8, 4]),  # [11,  7,  3]
@@ -129,8 +152,8 @@ def generate_variable_environment_plots(range_params):
     params['dev_coupling_mosaic'] = DEV_COUPLINGS[0]
     params['dev_coupling_hybrid'] = DEV_COUPLINGS[1]
     params['dev_coupling_concerted'] = DEV_COUPLINGS[2]
-    params['num_generations_to_env_switch'] = 10
-    params['num_episodes'] = 10
+    params['num_generations_to_env_switch'] = 2
+    params['num_episodes'] = 50
     params['num_iterations'] = NUM_RUNS
     params['cost_range'] = range_params['cost_range']
     params['max_benefit_range'] = range_params['max_benefit_range']
@@ -165,8 +188,8 @@ def generate_variable_environment_long_evolution_data(range_params):
     params['dev_coupling_mosaic'] = DEV_COUPLINGS[0]
     params['dev_coupling_hybrid'] = DEV_COUPLINGS[1]
     params['dev_coupling_concerted'] = DEV_COUPLINGS[2]
-    params['num_generations_to_env_switch'] = 10
-    params['num_episodes'] = 10
+    params['num_generations_to_env_switch'] = 2
+    params['num_episodes'] = 50
     params['num_iterations'] = 100
     params['cost_range'] = range_params['cost_range']
     params['max_benefit_range'] = range_params['max_benefit_range']
@@ -193,10 +216,12 @@ def generate_variable_environment_long_evolution_data(range_params):
 
 
 if __name__ == '__main__':
-    print("generate_mosaicism_plots_for_homogeneous_populations")
-    generate_mosaicism_plots_for_homogeneous_populations()
+    #print("generate_mosaicism_plots_for_homogeneous_populations")
+    #generate_mosaicism_plots_for_homogeneous_populations()
     print("generate_competition_plots")
     generate_competition_plots()
+    print("generate_long_evolution_data")
+    generate_long_evolution_data()
     print("generate_competition_plots_specific_environments")
     generate_competition_plots_specific_environments()
     print("generate_variable_environment_plots")
