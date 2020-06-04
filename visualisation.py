@@ -53,3 +53,19 @@ def save_history_to_csv(filename, keys, history, generations_per_env):
             for episode in iteration["critter_counts"]:
                 for generation in episode:
                     data_writer.writerow([generation.get(key, 0) for key in keys])
+
+
+def save_history_of_dev_coupling_to_csv(filename, keys, history):
+    with open(filename, 'w', newline='') as csv_file:
+        data_writer = csv.writer(csv_file)
+        for i, iteration in enumerate(history):
+            row = []
+            for episode in iteration["critter_counts"]:
+                for generation in episode:
+                    crit_count = 0
+                    dev_coupling_count = 0
+                    for key in keys:
+                        crit_count += generation.get(key, 0)
+                        dev_coupling_count += generation.get(key, 0) * key
+                    row.append(dev_coupling_count / crit_count)
+            data_writer.writerow(row)

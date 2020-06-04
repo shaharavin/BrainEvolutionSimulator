@@ -1,7 +1,7 @@
 from simulation import init_evolve_and_calc_log_sizes, evolve_and_compare_populations, \
     evolve_and_compare_mutating_populations_with_variable_environment
 from visualisation import plot_sizes_boxplot, plot_populations_boxplot, save_boxplot_data_to_csv, \
-    save_history_to_csv
+    save_history_to_csv, save_history_of_dev_coupling_to_csv
 from world import create_fixed_environment
 
 DEV_COUPLINGS = [0.0, 0.5, 1.0]
@@ -89,6 +89,7 @@ def generate_long_evolution_data():
             filename = 'long_history_func_coupling_%.1f_max_benefit_%.1f.csv' % (func_coupling, max_benefit)
             keys = DEV_COUPLINGS
             save_history_to_csv(filename, keys, history, params['num_generations'])
+            save_history_of_dev_coupling_to_csv('dev_coupling_'+filename, keys, history)
 
 
 ENVIRONMENTS = [
@@ -218,14 +219,14 @@ def generate_variable_environment_long_evolution_data(range_params):
 if __name__ == '__main__':
     #print("generate_mosaicism_plots_for_homogeneous_populations")
     #generate_mosaicism_plots_for_homogeneous_populations()
-    print("generate_competition_plots")
-    generate_competition_plots()
-    print("generate_long_evolution_data")
-    generate_long_evolution_data()
-    print("generate_competition_plots_specific_environments")
+    #print("generate_competition_plots")
+    #generate_competition_plots()
+    #print("generate_long_evolution_data")
+    #generate_long_evolution_data()
+    #print("generate_competition_plots_specific_environments")
     generate_competition_plots_specific_environments()
-    print("generate_variable_environment_plots")
-    generate_variable_environment_plots(NORMAL_RANGE)
+    #print("generate_variable_environment_plots")
+    #generate_variable_environment_plots(NORMAL_RANGE)
     # generate_variable_environment_plots(EXTREME_RANGE)
-    print("generate_variable_environment_long_evolution_data")
-    generate_variable_environment_long_evolution_data(NORMAL_RANGE)
+    #print("generate_variable_environment_long_evolution_data")
+    #generate_variable_environment_long_evolution_data(NORMAL_RANGE)
