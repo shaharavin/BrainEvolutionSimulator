@@ -1,7 +1,7 @@
 from simulation import init_evolve_and_calc_log_sizes, evolve_and_compare_populations, \
     evolve_and_compare_mutating_populations_with_variable_environment
 from visualisation import plot_sizes_boxplot, plot_populations_boxplot, save_boxplot_data_to_csv, \
-    save_history_to_csv, save_history_of_dev_coupling_to_csv
+    save_history_to_csv, save_history_of_dev_coupling_to_csv, plot_avg_component_sizes
 from world import create_fixed_environment
 
 DEV_COUPLINGS = [0.0, 0.5, 1.0]
@@ -16,7 +16,8 @@ DEFAULTS = {
     'num_components': 3,
     'max_size': 3,
     'cost': 1,
-    'max_benefit': 2
+    'max_benefit': 2,
+    'body_size_limit': True
 }
 NUM_RUNS = 1000
 
@@ -105,30 +106,44 @@ ENVIRONMENTS = [
 ]
 
 
-def generate_competition_plots_specific_environments():
+def generate_competition_plots_specific_environments(body_size_limit=False):
 
     params = DEFAULTS.copy()
 
     params['dev_coupling_mosaic'] = DEV_COUPLINGS[0]
     params['dev_coupling_hybrid'] = DEV_COUPLINGS[1]
     params['dev_coupling_concerted'] = DEV_COUPLINGS[2]
-    params['num_iterations'] = NUM_RUNS
+    params['num_iterations'] = 1000
+    params['num_generations'] = 50
+    params['retain_history'] = True
+    params['retain_avg_component_sizes'] = True
 
     del(params['dev_coupling'])
 
     total_population = params['num_critters']*len(DEV_COUPLINGS)
 
     for environment in ENVIRONMENTS:
+        environment.body_size_limit = body_size_limit
         params['func_coupling'] = environment.func_coupling
         params['max_benefit'] = environment.max_benefit
         params['fixed_environment'] = environment
-        data = evolve_and_compare_populations(**params)
-        base_filename = 'box_plot_competition_fixed_environment_%s' % str(environment).replace(',', '_')
+        data, history = evolve_and_compare_populations(**params)
+        base_filename = 'competition_fixed_environment_%s' % str(environment).replace(',', '_')
         keys = DEV_COUPLINGS
         values = [[(result.get(dev_coupling, 0) / total_population) for result in data]
                   for dev_coupling in DEV_COUPLINGS]
-        save_boxplot_data_to_csv(base_filename + '.csv', keys, values)
-        # plot_populations_boxplot(base_filename + '.png', keys, values)
+        #save_boxplot_data_to_csv('box_plot_' + base_filename + '.csv', keys, values)
+        # plot_populations_boxplot('box_plot_' + base_filename + '.png', keys, values)
+        avg_component_sizes = {k: {i: [] for i in range(params['num_components'])} for k in keys}
+        for k in keys:
+            for i in range(params['num_components']):
+                avg_component_sizes[k][i] = [sum(x)/params['num_iterations'] for x in zip(
+                    *[iter['avg_component_sizes'][k][i] for iter in history])]
+        avg_critter_counts = {k: [] for k in keys}
+        for k in keys:
+            avg_critter_counts[k] = [sum(x)/params['num_iterations'] for x in zip(
+                *[[c.get(k, 0) for c in iter['critter_counts'][0]] for iter in history])]
+        plot_avg_component_sizes('scatter_' + base_filename + '.png', avg_critter_counts, avg_component_sizes)
 
 
 NORMAL_RANGE = {
@@ -224,9 +239,9 @@ if __name__ == '__main__':
     #print("generate_long_evolution_data")
     #generate_long_evolution_data()
     #print("generate_competition_plots_specific_environments")
-    generate_competition_plots_specific_environments()
+    #generate_competition_plots_specific_environments(body_size_limit=True)
     #print("generate_variable_environment_plots")
-    #generate_variable_environment_plots(NORMAL_RANGE)
+    generate_variable_environment_plots(NORMAL_RANGE)
     # generate_variable_environment_plots(EXTREME_RANGE)
     #print("generate_variable_environment_long_evolution_data")
     #generate_variable_environment_long_evolution_data(NORMAL_RANGE)

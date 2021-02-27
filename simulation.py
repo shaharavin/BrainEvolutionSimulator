@@ -57,10 +57,11 @@ def init_evolve_and_calc_sizes(
         dev_coupling,
         cost,
         max_benefit,
-        func_coupling):
+        func_coupling,
+        body_size_limit):
 
     population = init_population(num_critters, max_size, dev_coupling, num_components)
-    environment = Environment(cost, max_benefit, func_coupling, num_components)
+    environment = Environment(cost, max_benefit, func_coupling, num_components, body_size_limit=body_size_limit)
 
     return evolve_and_calc_sizes(population, environment, num_generations, num_offspring, lifespan)
 
@@ -139,8 +140,10 @@ def evolve_and_compare_populations(
         num_offspring,
         lifespan,
         num_iterations,
+        body_size_limit=False,
         fixed_environment=None,
-        retain_history=False):
+        retain_history=False,
+        retain_avg_component_sizes=False):
 
     population = init_mixed_population(
         num_critters,
@@ -166,7 +169,9 @@ def evolve_and_compare_populations(
                 cost=cost,
                 max_benefit=max_benefit,
                 num_components=num_components,
-                func_coupling=func_coupling)
+                func_coupling=func_coupling,
+                body_size_limit=body_size_limit
+            )
 
         r = evolve_and_calc_sizes(list(population), environment, num_generations, num_offspring, lifespan)
 
@@ -177,6 +182,21 @@ def evolve_and_compare_populations(
                 "environments": [environment],
                 "critter_counts": [[Counter([c.dev_coupling for c in generation]) for generation in r]]
             })
+            if retain_avg_component_sizes:
+                avg_component_sizes = {}
+                for k in (dev_coupling_mosaic, dev_coupling_hybrid, dev_coupling_concerted):
+                    avg_component_sizes[k] = {}
+                    critters_k = [[c.sizes for c in generation if c.dev_coupling == k]
+                                  for generation in r]
+                    for i in range(num_components):
+                        avgs_i = []
+                        for generation in critters_k:
+                            if generation:
+                                avgs_i.append(sum([sizes[i] for sizes in generation])/len(generation))
+                            else:
+                                avgs_i.append(0)
+                        avg_component_sizes[k][i] = avgs_i
+                history[-1]['avg_component_sizes'] = avg_component_sizes
 
     if retain_history:
         return results, history
@@ -199,6 +219,7 @@ def evolve_and_compare_mutating_populations_with_variable_environment(
         num_offspring,
         lifespan,
         num_iterations,
+        body_size_limit=False,
         retain_history=False):
 
     results = []
@@ -225,7 +246,7 @@ def evolve_and_compare_mutating_populations_with_variable_environment(
 
         for j in range(num_episodes):
             environment = create_random_environment(
-                cost_range, max_benefit_range, func_coupling_range, num_components)
+                cost_range, max_benefit_range, func_coupling_range, num_components, body_size_limit=body_size_limit)
             r = evolve_and_calc_sizes(
                 list(population), environment, num_generations_to_env_switch, num_offspring, lifespan)
             if retain_history:

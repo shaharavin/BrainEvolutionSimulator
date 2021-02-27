@@ -1,6 +1,13 @@
 import matplotlib.pyplot as plt
 import csv
 
+COLOURS = {
+    0.0: '#e69f00',
+    0.5: '#56b4e9',
+    1.0: '#009e73'
+}
+
+
 def plot_sizes(results, num_generations, num_components):
     plt.cla()
     xs = [x for x in range(num_generations)]
@@ -14,6 +21,26 @@ def plot_sizes(results, num_generations, num_components):
         plt.plot(xs, ys[t], label=t)
     plt.legend()
     plt.show()
+
+
+def plot_avg_component_sizes(filename, avg_critter_counts, avg_component_sizes):
+    keys = list(avg_component_sizes.keys())
+    components = list(avg_component_sizes[keys[0]].keys())
+    num_generations = len(avg_component_sizes[keys[0]][components[0]])
+    xs = list(range(num_generations))
+    ys = {}
+    ss = {}
+    cs = {}
+    for k in keys:
+        for i in components:
+            l = 'D %.1f #%d' % (k, i)
+            cs[l] = COLOURS[k]
+            ys[l] = [(x + i*5) for x in avg_critter_counts[k]]
+            ss[l] = avg_component_sizes[k][i]
+    for l in ys.keys():
+        plt.scatter(xs, ys[l], s=ss[l], c=cs[l])
+    plt.savefig(filename)
+    plt.close()
 
 
 def plot_sizes_boxplot(filename, keys, values):
